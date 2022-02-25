@@ -1,5 +1,9 @@
 # flutter_maps
 
+Using Firebase phone authentication, Cloud Firestore, Cloud Firebase Messaging,
+GoogleMaps Service, Places API and Directions API
+
+
 ![alt text](ScreenShots/1.jpeg )
 
 ![alt text](ScreenShots/2.jpeg )
