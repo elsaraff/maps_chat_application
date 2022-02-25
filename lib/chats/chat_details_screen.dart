@@ -1,0 +1,189 @@
+import 'package:conditional_builder_null_safety/conditional_builder_null_safety.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_maps/app_cubit/app_cubit.dart';
+import 'package:flutter_maps/app_cubit/app_states.dart';
+import 'package:flutter_maps/shared/functions.dart';
+import 'package:flutter_maps/models/message_model.dart';
+import 'package:flutter_maps/models/user_model.dart';
+
+var messageController = TextEditingController();
+
+class ChatDetailsScreen extends StatelessWidget {
+  final UserModel? userModel;
+  const ChatDetailsScreen({Key? key, this.userModel}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Builder(builder: (context) {
+      AppCubit.get(context).getMessages(receiverId: userModel!.uId!);
+      return BlocConsumer<AppCubit, AppStates>(
+        listener: (context, state) {},
+        builder: (context, state) {
+          return Scaffold(
+              appBar: AppBar(
+                leading: IconButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: const Icon(Icons.arrow_back_sharp,
+                        color: Colors.white)),
+                titleSpacing: 0.0,
+                title: InkWell(
+                  onTap: () {
+                    //navigateTo(context, ProfileDetailsScreen(userModel: userModel!));
+                  },
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20.0,
+                        backgroundImage: NetworkImage(userModel!.image!),
+                      ),
+                      const SizedBox(width: 15),
+                      Text(userModel!.name!),
+                    ],
+                  ),
+                ),
+              ),
+              body: ConditionalBuilder(
+                condition: state is GetMessageLoading,
+                builder: (context) =>
+                    const Center(child: CircularProgressIndicator()),
+                fallback: (context) => Form(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 10),
+                    child: Column(
+                      children: [
+                        ConditionalBuilder(
+                            condition:
+                                AppCubit.get(context).messages.isNotEmpty,
+                            builder: (context) => Expanded(
+                                  child: ListView.separated(
+                                    physics: const BouncingScrollPhysics(),
+                                    itemBuilder: (context, index) {
+                                      var message =
+                                          AppCubit.get(context).messages[index];
+
+                                      if (AppCubit.get(context)
+                                              .userModel!
+                                              .uId ==
+                                          message.senderId) {
+                                        return buildMyMessage(message);
+                                      } else {
+                                        return buildMessage(message);
+                                      }
+                                    },
+                                    separatorBuilder: (context, index) =>
+                                        const SizedBox(height: 10),
+                                    itemCount:
+                                        AppCubit.get(context).messages.length,
+                                  ),
+                                ),
+                            fallback: (context) => Expanded(
+                                    child: Column(children: const [
+                                  Spacer(),
+                                  Center(
+                                      child: Text('Start Chat...',
+                                          style: TextStyle(fontSize: 20))),
+                                  Spacer(),
+                                ]))),
+                        Column(
+                          children: [
+                            const SizedBox(height: 6),
+                            Container(
+                              decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.deepPurple),
+                                  borderRadius: BorderRadius.circular(15.0)),
+                              clipBehavior: Clip.antiAliasWithSaveLayer,
+                              child: Row(
+                                children: [
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                      child: TextFormField(
+                                    controller: messageController,
+                                    onFieldSubmitted: (value) {
+                                      if (messageController.text != '') {
+                                        AppCubit.get(context).sendMessage(
+                                          receiverId: userModel!.uId!,
+                                          dateTime: now.toString(),
+                                          time: DateTime.now().toString(),
+                                          text: value,
+                                        );
+                                        HapticFeedback.vibrate();
+                                        messageController.clear();
+                                      }
+                                    },
+                                    decoration: const InputDecoration(
+                                        border: InputBorder.none,
+                                        hintText: 'Type your message here..'),
+                                  )),
+                                  Container(
+                                    color: Colors.deepPurple,
+                                    height: 50,
+                                    child: MaterialButton(
+                                      onLongPress: () =>
+                                          HapticFeedback.vibrate(),
+                                      onPressed: () {
+                                        if (messageController.text != '') {
+                                          AppCubit.get(context).sendMessage(
+                                            receiverId: userModel!.uId!,
+                                            dateTime: now.toString(),
+                                            time: DateTime.now().toString(),
+                                            text: messageController.text,
+                                          );
+                                          HapticFeedback.vibrate();
+                                          messageController.clear();
+                                        }
+                                      },
+                                      minWidth: 1.0,
+                                      child: const Icon(
+                                        Icons.send,
+                                        size: 20.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ));
+        },
+      );
+    });
+  }
+
+  Widget buildMessage(MessageModel messageModel) => Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: const BorderRadiusDirectional.only(
+                  topStart: Radius.circular(10),
+                  topEnd: Radius.circular(10),
+                  bottomEnd: Radius.circular(10))),
+          child:
+              Text(messageModel.text, style: const TextStyle(fontSize: 18))));
+
+  Widget buildMyMessage(MessageModel messageModel) => Align(
+      alignment: AlignmentDirectional.centerEnd,
+      child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+              color: Colors.deepPurple.withOpacity(0.2),
+              borderRadius: const BorderRadiusDirectional.only(
+                topStart: Radius.circular(10),
+                topEnd: Radius.circular(10),
+                bottomStart: Radius.circular(10),
+              )),
+          child:
+              Text(messageModel.text, style: const TextStyle(fontSize: 18))));
+}
