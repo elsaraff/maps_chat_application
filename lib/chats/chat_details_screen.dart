@@ -81,8 +81,8 @@ class ChatDetailsScreen extends StatelessWidget {
                                         AppCubit.get(context).messages.length,
                                   ),
                                 ),
-                            fallback: (context) => Expanded(
-                                    child: Column(children: const [
+                            fallback: (context) => const Expanded(
+                                    child: Column(children: [
                                   Spacer(),
                                   Center(
                                       child: Text('Start Chat...',

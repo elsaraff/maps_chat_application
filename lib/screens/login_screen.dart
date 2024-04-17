@@ -4,18 +4,15 @@ import 'package:flutter_maps/shared/functions.dart';
 import 'package:flutter_maps/phone_auth_cubit/phone_auth_cubit.dart';
 import 'package:flutter_maps/phone_auth_cubit/phone_auth_states.dart';
 import 'package:flutter_maps/screens/otp_screen.dart';
-import 'package:intl_phone_number_input/intl_phone_number_input.dart';
 
 // https://receivesms.cc/      to Receive SMS online
 
 final TextEditingController phoneNumberController = TextEditingController();
 
-PhoneNumber number = PhoneNumber(isoCode: 'EG');
-
 class LoginScreen extends StatelessWidget {
   final formKey = GlobalKey<FormState>();
 
-  LoginScreen({Key? key}) : super(key: key);
+  LoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -58,23 +55,12 @@ class LoginScreen extends StatelessWidget {
                       style: TextStyle(fontSize: 18, color: Colors.grey),
                     ),
                     const SizedBox(height: 50.0),
-                    InternationalPhoneNumberInput(
-                      inputBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10.0)),
-                      textFieldController: phoneNumberController,
-                      keyboardType: const TextInputType.numberWithOptions(
-                        signed: false,
-                        decimal: false,
-                      ),
-                      initialValue: number,
-                      selectorConfig: const SelectorConfig(
-                          selectorType: PhoneInputSelectorType.BOTTOM_SHEET,
-                          setSelectorButtonAsPrefixIcon: true,
-                          useEmoji: true),
-                      onInputChanged: (PhoneNumber number) {
-                        finalPhoneNumber = number.phoneNumber.toString();
+                    TextFormField(
+                      controller: phoneNumberController,
+                      keyboardType: TextInputType.phone,
+                      onChanged: (c) {
+                        finalPhoneNumber = c;
                       },
-                      selectorTextStyle: const TextStyle(color: Colors.black54),
                     ),
                     const SizedBox(height: 30.0),
                     Container(
@@ -85,6 +71,7 @@ class LoginScreen extends StatelessWidget {
                       child: TextButton(
                         onPressed: () {
                           if (formKey.currentState!.validate()) {
+                            //https://stackoverflow.com/questions/64952016/firebase-phone-authentication-is-not-working-on-android-real-device
                             debugPrint(finalPhoneNumber.toString());
                             cubit.submitPhoneNumber(finalPhoneNumber!);
                           }
